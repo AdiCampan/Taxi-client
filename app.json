@@ -11,11 +11,10 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "jsEngine": "jsc"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +24,7 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "jsEngine": "hermes"
   }
 }
