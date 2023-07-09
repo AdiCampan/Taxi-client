@@ -12,14 +12,23 @@ import * as Location from "expo-location";
 import NewOrder from "../components/newOrder";
 
 export default function Map() {
-  const [newAddress, setNewAddress] = useState({
-    latitude: 39.970478,
-    longitude: -0.257338,
-  });
+  const [region, setRegion] = useState(null);
+  const [newAddress, setNewAddress] = useState(null);
   const [origin, setOrigin] = useState({
     latitude: 39.970478,
     longitude: -0.257338,
   });
+
+  useEffect(() => {
+    if (newAddress) {
+      setRegion({
+        latitude: newAddress.latitude,
+        longitude: newAddress.longitude,
+        latitudeDelta: 0.015,
+        longitudeDelta: 0.0121,
+      });
+    }
+  }, [newAddress]);
 
   async function getLocationPermission() {
     let { status } = await Location.requestForegroundPermissionsAsync();
@@ -36,15 +45,13 @@ export default function Map() {
     };
     setOrigin(current);
   }
-  console.log("newAddress", newAddress);
-  console.log("origin", origin);
 
   useEffect(() => {
     getLocationPermission();
   }, []);
 
   const handleCustomAddress = (newAddress) => {
-    console.log(newAddress);
+    setNewAddress(newAddress);
   };
 
   return (
@@ -54,6 +61,7 @@ export default function Map() {
         showsMyLocationButton={true}
         showsUserLocation={true}
         followsUserLocation={true}
+        region={region}
         style={styles.map}
         initialRegion={{
           latitude: origin.latitude,
@@ -65,7 +73,7 @@ export default function Map() {
       >
         {origin && (
           <Marker
-            coordinate={newAddress}
+            coordinate={origin}
             title="Taxi here !"
             // pinColor="black"
             draggable={true}

@@ -12,24 +12,31 @@ import { db } from "../firebase";
 import * as Crypto from "expo-crypto";
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import Geocoder from "react-native-geocoding";
-// import { GOOGLE_API_KEY } from "";
+import { useNavigation } from "@react-navigation/native";
+import { GOOGLE_MAPS_API_KEY } from "@env";
 
 const NewOrder = ({ origin, handleCustomAddress }) => {
-  const [address, setAddress] = useState({
+  const navigation = useNavigation();
+  const [state, setState] = useState(null);
+  const [addressCoords, setAddressCoords] = useState({
     latitude: 39.970478,
     longitude: -0.257338,
   });
+  const [infoAddress, setInfoAddress] = useState();
   const [addressComplete, setAddressComplete] = useState("");
 
+  const timestamp = new Date();
+  const formatTime = timestamp.getTime();
+
   useEffect(() => {
-    setAddress(origin);
-    handleCustomAddress(address);
+    setAddressCoords(origin);
+    handleCustomAddress(addressCoords);
   }, [origin]);
 
-  Geocoder.init("AIzaSyD-1uUnvrA0WXJ_SkSsoCjX9-cJs_A8XRE");
+  Geocoder.init(GOOGLE_MAPS_API_KEY);
   Geocoder.from({
-    latitude: address.latitude,
-    longitude: address.longitude,
+    latitude: addressCoords.latitude,
+    longitude: addressCoords.longitude,
   })
     .then((json) => {
       var addressComponent = json.results[0].formatted_address;
@@ -37,32 +44,14 @@ const NewOrder = ({ origin, handleCustomAddress }) => {
     })
     .catch((error) => console.warn(error));
 
-  // console.log("searched address", addressComplete);
-
-  // const getOrders = () => {
-  //   const ordersRef = ref(db, "orders");
-  //   onValue(ordersRef, (snapshot) => {
-  //     const tmpArray = [];
-
-  //     snapshot.forEach((childSnapshot) => {
-  //       const childKey = childSnapshot.key;
-  //       const childData = childSnapshot.val();
-
-  //       tmpArray.push({ id: childKey, ...childData });
-  //     });
-  //     const orders = tmpArray;
-  //     console.log(orders);
-  //   });
-  // };dej
   const addOrder = (order) => {
     return (dispatch) => {
-      // dispatch(fetchLoadingOrdersActions.pending());
-
-      const ordersRef = ref(db, `orders/${Crypto.randomUUID()}/`);
+      const ordersRef = ref(db, `orders/${order.id}/`);
       set(ordersRef, order)
-        // .then((data) => console.log("order added", data))
+        .then(navigation.navigate("MyOrder", { order: order }))
         .catch((err) => console.error(err));
-      setAddress(origin);
+      setAddressCoords(origin);
+      setState("In asteptare");
     };
   };
 
@@ -72,6 +61,10 @@ const NewOrder = ({ origin, handleCustomAddress }) => {
         <TouchableOpacity
           onPress={addOrder({
             address: JSON.stringify(addressComplete),
+            state: state,
+            addressCoords: addressCoords,
+            id: Crypto.randomUUID(),
+            startDate: formatTime,
           })}
           style={styles.button}
         >
@@ -86,17 +79,21 @@ const NewOrder = ({ origin, handleCustomAddress }) => {
           onPress={(data, details = null) => {
             // 'details' is provided when fetchDetails = true
             // console.log(data, details);
-            setAddress({
+            setAddressCoords({
               latitude: details.geometry.location.lat,
               longitude: details.geometry.location.lng,
               latitudeDelta: 0.09,
               longitudeDelta: 0.04,
             });
+            // setInfoAddress({
+            //   latitude: details.geometry.location.lat,
+            //   longitude: details.geometry.location.lng,
+            // });
           }}
           query={{
-            key: "AIzaSyD-1uUnvrA0WXJ_SkSsoCjX9-cJs_A8XRE",
+            key: { GOOGLE_MAPS_API_KEY },
             language: "en",
-            location: `${address.latitude}, ${address.longitude}`,
+            location: `${addressCoords.latitude}, ${addressCoords.longitude}`,
           }}
           styles={{
             container: {
@@ -122,7 +119,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   button: {
-    backgroundColor: "purple",
+    backgroundColor: "lightslategrey",
     padding: 10,
     marginTop: 50,
     width: "50%",
